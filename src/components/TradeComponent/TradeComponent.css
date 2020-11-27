@@ -1,0 +1,42 @@
+.container{
+    height: calc(100vh - 50px);
+    background: none;
+}
+.text-area {
+    background-color: #fff;
+    padding: 4px;
+}
+
+.container h3 {
+    color: #333;
+    font-weight: 600;
+    line-height: 28px;
+}
+.search-body {
+    /* background-color: #fff; */
+    height: calc(100% - 70px);
+}
+.drop-menu{
+    width: 200px;
+}
+.bond-item{
+    width: 100%;
+    padding: 7px 10px;
+    border-radius: 5px;
+    background-color: #f7f7f7;
+    margin-bottom: 10px;
+}
+.opeate-item{
+    cursor: pointer;
+    color: #437fff;
+}
+.aline{
+    background-color:#ccc;
+    height:1px;
+    margin: 10px;
+}
+:global {
+    .ant-tabs-bar{
+        margin-bottom: 8px;
+    }
+}
