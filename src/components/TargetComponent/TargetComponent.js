@@ -97,6 +97,7 @@ class TargetComponent extends React.PureComponent {
     bondData: [],
     activeKey: [],
     refreshList: [],
+    pageSize: 10,
   }
 
   componentDidMount () {
@@ -836,21 +837,44 @@ class TargetComponent extends React.PureComponent {
     const { resultData } = this.state
     let copyStr = ''
     resultData.forEach(item => {
-      if (item.basestandard) {
-        copyStr += item.bondname + "(基准:" + item.basestandard + ")\n"
-        copyStr += myreplaceStr('标位') + myreplaceStr('减基准后')+ myreplaceStr('数量(亿)')+ "\n"
-      } else {
-        copyStr += item.bondname + "\n"
-        copyStr += myreplaceStr('标位') + myreplaceStr('数量(亿)')+ "\n"
-      }
-      item.childArr.forEach(etem => {
-        if (etem.state === '有效') {
-          copyStr += myreplaceStr(parseFloat(etem.bw).toFixed(4))
-          if (item.basestandard) copyStr += myreplaceStr(parseFloat(etem.bw - etem.basestandard).toFixed(4)) + "     "
-          copyStr += myreplaceStr(parseFloat(etem.bl).toFixed(4)) + "\n"
+      if (item.bondnameID) {
+        if (item.basestandard) {
+          copyStr += item.bondname + "(基准:" + item.basestandard + ")\n"
+          copyStr += myreplaceStr('标位') + myreplaceStr('减基准后')+ myreplaceStr('数量(亿)')+ "\n"
+        } else {
+          copyStr += item.bondname + "\n"
+          copyStr += myreplaceStr('标位') + myreplaceStr('数量(亿)')+ "\n"
         }
-      })
-      copyStr += "\n"
+        let dataInfo = {}
+        item.childArr.forEach(etem => {
+          let { bw, state, basestandard } = etem
+          if (!dataInfo[bw]) {
+            dataInfo[bw] = {
+              bw,
+              state,
+              basestandard,
+              childArr: [],
+            }
+          }
+          dataInfo[bw].childArr.push(etem)
+        })
+        const newArr = Object.values(dataInfo).sort((a, b) => a.bw - b.bw)
+        newArr.forEach(etem => {
+          if (etem.state === '有效') {
+            const newNum = etem.childArr.reduce((num, next) => {
+              if (next.state === '有效') {
+                return num + Number(next.bl)
+              } else {
+                return num
+              }
+            }, 0)
+            copyStr += myreplaceStr(parseFloat(etem.bw).toFixed(4))
+            if (item.basestandard) copyStr += myreplaceStr(parseFloat(etem.bw - etem.basestandard).toFixed(4)) + "     "
+            copyStr += myreplaceStr(parseFloat(newNum).toFixed(4)) + "\n"
+          }
+        })
+        copyStr += "\n"
+      }
     })
     copyToClipboard(copyStr)
     message.destroy()
@@ -891,6 +915,8 @@ class TargetComponent extends React.PureComponent {
         bondData: result.data,
         total: Number(result.totleRecords) || 0,
         totalPageNum: result.totlePages || 1,
+        current: Number(result.pageNum),
+        pageSize: result.data.length > 10 ? result.data.length : 10,
       })
     })
     .catch(error => console.log('error', error));
@@ -898,6 +924,7 @@ class TargetComponent extends React.PureComponent {
 
   followItem = (bondnameIDs, type) => {
     this.hasCookie()
+    const { bondData } = this.state
     var urlencoded = new URLSearchParams();
     urlencoded.append("bondnameIDs", bondnameIDs);
     urlencoded.append("attentioninfo", type);
@@ -914,8 +941,21 @@ class TargetComponent extends React.PureComponent {
       if (result.isSuccess === '1') {
         const str = type === 'cancel' ? '取消关注成功' : '关注成功'
         message.success(str)
-        const arr = this.state.bondData.map(item => { return item.bondnameID })
-        this.handleSearch(arr.join(',') + '&bondnameids')
+        let obj
+        if (bondnameIDs.indexOf(',') === -1) {
+          obj = bondData.map(item => {
+            if (item.bondnameID === bondnameIDs) {
+              return Object.assign(item, { attention: type === 'cancel' ? '0' : '1' })
+            } else {
+              return item
+            }
+          })
+        } else {
+          obj = bondData.map(item => { return Object.assign(item, { attention: type === 'cancel' ? '0' : '1' }) })
+        }
+        this.setState({
+          bondData: obj,
+        })
         this.semanticAnalysisForBondInfo(bondnameIDs)
       }
     })
@@ -977,7 +1017,7 @@ class TargetComponent extends React.PureComponent {
   }
 
   render () {
-    const { processData, activeKey, textValue, selectedRowKeys, resultData, selectValue, operatorData, totalPageNum, searchValue, bondData, total, current} = this.state
+    const { pageSize, processData, activeKey, textValue, selectedRowKeys, resultData, selectValue, operatorData, totalPageNum, searchValue, bondData, total, current} = this.state
     const columns = [{
       title: '债券名称',
       dataIndex: 'bondname',
@@ -1312,7 +1352,7 @@ class TargetComponent extends React.PureComponent {
               </Scrollbars>
             </div>
             <div style={{ width: '100%', textAlign: 'right', marginTop: 8 }}>
-            <Pagination showTotal={total => `总记录数: ${total} 当前页：${current}/${totalPageNum}`} current={current} total={total} onChange={(page) => this.setState({ current: page }, () => this.handleSearch())} />
+            <Pagination pageSize={pageSize} showTotal={total => `总记录数: ${total} 当前页：${current}/${totalPageNum}`} current={current} total={total} onChange={(page) => this.setState({ current: page }, () => this.handleSearch())} />
             </div>
           </Sider>
         </Layout>

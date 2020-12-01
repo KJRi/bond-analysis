@@ -48,4 +48,7 @@ $ yarn start      # Compile and launch (same as `npm start`)
 - [ ] react-redux-router
 - [ ] debug logging
 
-> 关于这个starter kit的更多信息，请查看[davezuko/react-redux-starter-kit](https://github.com/davezuko/react-redux-starter-kit)
+## 项目打包
+1. $ npm run build
+2. 将dist中的所有文件上传到nginx服务器 路径为/usr/share/nginx/html
+3. 直接访问端口名即可

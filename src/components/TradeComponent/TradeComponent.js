@@ -1,7 +1,7 @@
 // @flow
 import React from 'react'
 import styles from './TradeComponent.css'
-import { Layout, Button, Input, Table, Modal, Radio, Select, Icon, message, Popconfirm, Pagination, Row, Col, Collapse } from 'antd'
+import { Layout, Button, Input, Modal, Radio, Select, Icon, message, Popconfirm, DatePicker, Row, Col, Collapse } from 'antd'
 import moment from 'moment'
 import EditableCell from 'components/EditableCell'
 import Scrollbars from 'react-custom-scrollbars'
@@ -180,124 +180,13 @@ class TradeComponent extends React.PureComponent {
   }
 
   render () {
-    const { textValue, structData, operatorData } = this.state
-    const resultColumns = [{
-      title: '标位',
-      dataIndex: 'bw',
-      key: 'bw',
-      sorter: (a, b) => a.state === '有效' && (a.bw - b.bw),
-      render: (text, record) => (
-        <EditableCell
-          value={text}
-          disabled={record.state !== '有效'}
-          onChange={this.onResultCellChange(record, 'bw')}
-        />
-      ),
-    }, {
-      title: '标量(亿元)',
-      dataIndex: 'bl',
-      key: 'bl',
-      sorter: (a, b) => a.state === '有效' && (a.bl - b.bl),
-      render: (text, record) => (
-        <EditableCell
-          value={text}
-          disabled={record.state !== '有效'}
-          onChange={this.onResultCellChange(record, 'bl')}
-        />
-      ),
-    }, {
-      title: '交易员',
-      dataIndex: 'operator',
-      key: 'operator',
-      render: (text, record) => (
-        <Select disabled={record.state !== '有效'} dropdownMatchSelectWidth={false} value={text} onChange={this.onResultCellChange(record, 'operatorID')}>
-          {operatorData && operatorData.map(item => {
-            return <Option key={item.operatorID} value={item.operatorID}>{item.operator}</Option>
-          })}
-        </Select>
-      ),
-    },{
-      title: '客户',
-      dataIndex: 'cust',
-      key: 'cust',
-      render: (text, record) => (
-        <EditableCell
-          value={text}
-          disabled={record.state !== '有效'}
-          onChange={this.onResultCellChange(record, 'cust')}
-        />
-      ),
-    }, {
-      title: '方式',
-      dataIndex: 'fs',
-      key: 'fs',
-    }, {
-      title: '更新时间',
-      dataIndex: 'updateTime',
-      key: 'updateTime',
-    }, {
-      title: '占发行量比',
-      dataIndex: 'circulation',
-      key: 'circulation',
-      render: (text, record) => (
-      <span>{text ? Math.ceil(record.bl/text * 100) : '数据不全'}</span>
-      ),
-    }, {
-      title: '状态',
-      dataIndex: 'state',
-      key: 'state',
-    }, {
-      title: '操作类型',
-      dataIndex: 'cz',
-      key: 'cz',
-      render: (text, record) => (
-      <span>{
-        record.state === '有效'
-        ? <span>
-          {
-            record.changeState
-            ? <span
-            className={styles['opeate-item']}
-            style={{ marginRight: 10 }}
-            onClick={() => this.updateItem(record, 'update')} >保存</span>
-            : <span style={{ marginRight: 10, color: '#e8e8e8' }}>保存</span>
-          }
-          <Popconfirm
-          title="确认删除吗？"
-          onConfirm={() => this.updateItem(record, 'del')}
-          okText='是'
-          cancelText='否'
-          >
-            <span className={styles['opeate-item']}>删除</span>
-          </Popconfirm>
-        </span>
-        : <Popconfirm
-        title="确认恢复吗？"
-        onConfirm={() => this.recoverItem(record)}
-        okText='是'
-        cancelText='否'
-        >
-          <span className={styles['opeate-item']}>恢复</span>
-        </Popconfirm>
-        }</span>
-      )
-    }, {
-      title: '备注',
-      dataIndex: 'note',
-      key: 'note',
-      render: (text, record) => (
-        <EditableCell
-          value={text}
-          disabled={record.state !== '有效'}
-          onChange={this.onResultCellChange(record, 'note')}
-        />
-      ),
-    }]
+    const { textValue, structData, operatorData, dateValue } = this.state
     return (
         <Layout className={styles['container']}>
           <Content style={{ borderRadius: 10, marginRight: 8 }} className={styles['text-area']}>
             <Scrollbars autoHide>
               <Content  className={styles['text-area']}>
+                <DatePicker value={dateValue} onChange={e => this.setState({ dateValue: e })} />
                 <div style={{ justifyContent: 'space-between', display: 'flex', marginBottom: 10 }}>
                   <h3>解析框</h3>
                   <div>
