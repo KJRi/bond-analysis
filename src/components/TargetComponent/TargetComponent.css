@@ -9,7 +9,7 @@
 
 .container h3 {
     color: #333;
-    font-weight: 600;
+    font-weight: bold;
     line-height: 28px;
 }
 .search-body {
@@ -48,6 +48,14 @@
 .disable-line{
     background-color: #ccc;
 }
+.click-row {
+    background-color : #cbf2ff
+}
+.fix-btn{
+    position: fixed;
+    right: 0;
+    bottom: 20px;
+}
 :global {
     .ant-tabs-bar{
         margin-bottom: 8px;
@@ -74,4 +82,20 @@
           background: #fff;
         }
       }
+    .ant-collapse-header{
+        font-weight: bold;
+        font-size: 14px;
+        background-color: #63c8cf;
+    }
+    .ant-table-thead>tr>th>span{
+        font-weight: bold;
+        font-size: 14px;
+    }
+    .ant-table-row{
+        color: #000;
+    }
+    .ant-table-tbody>tr>td.ant-table-selection-column, .ant-table-thead>tr>th.ant-table-selection-column{
+        width: 30px;
+        min-width: 0;
+    }
 }

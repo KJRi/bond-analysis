@@ -29,7 +29,7 @@ class Home extends React.PureComponent {
             <TabPane tab="一级投标解析" key='0' style={{ padding: '0 8px' }}>
               <TargetComponent {...this.props} />
             </TabPane>
-            <TabPane disabled tab="二级交易解析" key='1' style={{ padding: '0 8px' }}>
+            <TabPane tab="二级交易解析" key='1' style={{ padding: '0 8px' }}>
               <TradeComponent {...this.props} />
             </TabPane>
           </Tabs>

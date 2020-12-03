@@ -98,6 +98,7 @@ class TargetComponent extends React.PureComponent {
     activeKey: [],
     refreshList: [],
     pageSize: 10,
+    collapseState: false,
   }
 
   componentDidMount () {
@@ -612,7 +613,7 @@ class TargetComponent extends React.PureComponent {
             return res.msg
           } else {
             return new Promise((resolve, reject) => {
-            Modal.success({
+              Modal.success({
               title: '入库成功提示',
               content: <div>
                 <p dangerouslySetInnerHTML={{__html: res.msg }} />
@@ -620,7 +621,7 @@ class TargetComponent extends React.PureComponent {
               </div>,
               okText: '确定',
               onOk() {
-                let arr = []
+                let arr = datas
                 Modal.confirm({
                   title: '请选择需要删除的信息',
                   width: 700,
@@ -632,6 +633,11 @@ class TargetComponent extends React.PureComponent {
                     rowKey="tradesn"
                     rowSelection={{
                       type: 'checkbox',
+                      getCheckboxProps(record) {
+                        return {
+                          defaultChecked: record.tradesn
+                        }
+                      },
                       onChange: (selectedRowKeys, selectedRows) => {
                         arr = selectedRows
                       }
@@ -817,6 +823,7 @@ class TargetComponent extends React.PureComponent {
             return {
               ...etem,
               changeState: false,
+              clickState: false,
               key: index,
             }
           }),
@@ -1016,22 +1023,39 @@ class TargetComponent extends React.PureComponent {
     return arr
   }
 
+  matchRowSelection = (item) => {
+    if (item.state === '有效') {
+      if (item.clickState) {
+        return styles['click-row']
+      } else {
+        return ''
+      }
+    } else {
+      return styles['disable-line']
+    }
+  }
+
+  rowClick = (obj) => {
+    const resultData = [...this.state.resultData]
+    const target = resultData.find(item => item.bondnameID === obj.bondnameID).childArr[obj.key]
+    if (target) {
+      target['clickState'] = !target['clickState']
+      this.setState({ resultData });
+    }
+  }
+
+  collapseSider = () => {
+    this.setState({
+      collapseState: !this.state.collapseState,
+    })
+  }
+
   render () {
-    const { pageSize, processData, activeKey, textValue, selectedRowKeys, resultData, selectValue, operatorData, totalPageNum, searchValue, bondData, total, current} = this.state
+    const { pageSize, processData, activeKey, textValue, selectedRowKeys, resultData, selectValue, collapseState, operatorData, totalPageNum, searchValue, bondData, total, current} = this.state
     const columns = [{
       title: '债券名称',
       dataIndex: 'bondname',
       key: 'bondname',
-    }, {
-      title: '标量',
-      dataIndex: 'bl',
-      key: 'bl',
-      render: (text, record) => (
-        <EditableCell
-          value={text}
-          onChange={this.onCellChange(record.key, 'bl')}
-        />
-      ),
     }, {
       title: '标位',
       dataIndex: 'bw',
@@ -1040,6 +1064,16 @@ class TargetComponent extends React.PureComponent {
         <EditableCell
           value={text}
           onChange={this.onCellChange(record.key, 'bw')}
+        />
+      ),
+    }, {
+      title: '标量',
+      dataIndex: 'bl',
+      key: 'bl',
+      render: (text, record) => (
+        <EditableCell
+          value={text}
+          onChange={this.onCellChange(record.key, 'bl')}
         />
       ),
     },{
@@ -1134,24 +1168,23 @@ class TargetComponent extends React.PureComponent {
         />
       ),
     }, {
+      title: '备注',
+      dataIndex: 'note',
+      key: 'note',
+      render: (text, record) => (
+        <EditableCell
+          value={text}
+          disabled={record.state !== '有效'}
+          onChange={this.onResultCellChange(record, 'note')}
+        />
+      ),
+    }, {
       title: '占发行量比',
       dataIndex: 'circulation',
       key: 'circulation',
       render: (text, record) => (
       <span>{text ? Math.ceil(record.bl/text * 100) : '数据不全'}</span>
       ),
-    }, {
-      title: '方式',
-      dataIndex: 'fs',
-      key: 'fs',
-    }, {
-      title: '更新时间',
-      dataIndex: 'updateTime',
-      key: 'updateTime',
-    }, {
-      title: '状态',
-      dataIndex: 'state',
-      key: 'state',
     }, {
       title: '操作类型',
       dataIndex: 'cz',
@@ -1188,16 +1221,17 @@ class TargetComponent extends React.PureComponent {
         }</span>
       )
     }, {
-      title: '备注',
-      dataIndex: 'note',
-      key: 'note',
-      render: (text, record) => (
-        <EditableCell
-          value={text}
-          disabled={record.state !== '有效'}
-          onChange={this.onResultCellChange(record, 'note')}
-        />
-      ),
+      title: '状态',
+      dataIndex: 'state',
+      key: 'state',
+    }, {
+      title: '方式',
+      dataIndex: 'fs',
+      key: 'fs',
+    }, {
+      title: '更新时间',
+      dataIndex: 'updateTime',
+      key: 'updateTime',
     }]
     const rowSelection = {
       type: 'checkbox',
@@ -1234,7 +1268,7 @@ class TargetComponent extends React.PureComponent {
                     <Button type='primary' onClick={this.submitDatabase}>提交入库</Button>
                   </div>
                   <Scrollbars autoHide style={{ height: 190, backgroundColor: '#fff' }}>
-                    <Table size="small" style={{ backgroundColor: '#FFF' }} columns={columns} dataSource={processData} pagination={false} rowSelection={rowSelection} scroll={{ x: 'max-content' }} />
+                    <Table size="middle" style={{ backgroundColor: '#FFF' }} columns={columns} dataSource={processData} pagination={false} rowSelection={rowSelection} scroll={{ x: 'max-content' }} />
                   </Scrollbars>
                 </Content>
               </Layout>
@@ -1265,8 +1299,9 @@ class TargetComponent extends React.PureComponent {
                       </span>} key={item.bondname} >
                         {
                           item.bondnameID
-                          ? <Table size="small" style={{ backgroundColor: '#FFF' }} columns={resultColumns} rowSelection={{ type: 'checkbox' }}
-                          dataSource={item.childArr} rowClassName={record => record.state === '有效' ? '' : styles['disable-line']}
+                          ? <Table size="middle" style={{ backgroundColor: '#FFF' }} columns={resultColumns}
+                          dataSource={item.childArr} rowClassName={this.matchRowSelection}
+                          onRowClick={this.rowClick}
                           pagination={false} scroll={{ x: 'max-content' }} />
                           : <div style={{ textAlign: 'center' }} ><p style={{ color: 'red' }}>暂无债券信息</p></div>
                         }
@@ -1277,7 +1312,9 @@ class TargetComponent extends React.PureComponent {
               </Footer>
             </Scrollbars>
           </Content>
-          <Sider style={{ borderRadius: 10, padding: 8 }} width={400} className={styles['text-area']}>
+          {
+            collapseState ? <Button className={styles['fix-btn']} size="small" onClick={this.collapseSider} ><Icon type="left" /></Button>
+            :<Sider style={{ borderRadius: 10, padding: 8 }} width={400} className={styles['text-area']}>
             <div style={{ justifyContent: 'space-between', display: 'flex', marginBottom: 8 }}>
               <Input
                 addonBefore={selectBefore}
@@ -1351,10 +1388,12 @@ class TargetComponent extends React.PureComponent {
               }
               </Scrollbars>
             </div>
-            <div style={{ width: '100%', textAlign: 'right', marginTop: 8 }}>
-            <Pagination pageSize={pageSize} showTotal={total => `总记录数: ${total} 当前页：${current}/${totalPageNum}`} current={current} total={total} onChange={(page) => this.setState({ current: page }, () => this.handleSearch())} />
+            <div style={{ width: '100%', justifyContent: 'space-between', display: 'flex', marginTop: 8 }}>
+              <Button size="small" onClick={this.collapseSider} ><Icon type="right" /></Button>
+              <Pagination pageSize={pageSize} showTotal={total => `总记录数: ${total} 当前页：${current}/${totalPageNum}`} current={current} total={total} onChange={(page) => this.setState({ current: page }, () => this.handleSearch())} />
             </div>
           </Sider>
+          }
         </Layout>
     )
   }

@@ -81,7 +81,12 @@ class TradeComponent extends React.PureComponent {
       redirect: 'follow'
     }).then(res => res.json())
     .then(result => {
-      this.handleProcessData(result)
+      if (result.success === '1') {
+        this.handleProcessData(result.data)
+      } else {
+        message.destroy()
+        message.error(result.msg)
+      }
     })
     .catch(error => console.log('error', error));
   }
@@ -138,7 +143,7 @@ class TradeComponent extends React.PureComponent {
                 const newObj = findItem
                 Object.assign(newObj, {
                   matchString: inputValue,
-                  type: '机构名称',
+                  type: newArr[newArr.length - 1].type,
                 })
                 data.splice(index, 1, newObj)
                 _this.handleProcessData(data)
@@ -172,9 +177,17 @@ class TradeComponent extends React.PureComponent {
       redirect: 'follow'
     }).then(res => res.json())
     .then(result => {
-      this.setState({
-        structData: result,
-      })
+      if (result.success === '1') {
+        this.setState({
+          structData: result.data,
+        })
+      } else {
+        message.destroy()
+        message.error(result.msg)
+        this.setState({
+          structData: [],
+        })
+      }
     })
     .catch(error => console.log('error', error));
   }
