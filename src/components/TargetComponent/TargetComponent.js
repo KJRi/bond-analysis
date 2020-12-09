@@ -99,6 +99,7 @@ class TargetComponent extends React.PureComponent {
     refreshList: [],
     pageSize: 10,
     collapseState: false,
+    bondnameSelect: [],
   }
 
   componentDidMount () {
@@ -290,6 +291,9 @@ class TargetComponent extends React.PureComponent {
           key: index,
           str: str.concat(item.bondname, item.bw, item.cust, item.operator,item.cz, item.note)
         }
+      })
+      this.setState({
+       bondnameSelect: [...new Set(processData.map(item => { return item.bondname }))]
       })
       if (newArr.length !== this.arraySet(newArr).length) {
         Modal.confirm({
@@ -1051,11 +1055,18 @@ class TargetComponent extends React.PureComponent {
   }
 
   render () {
-    const { pageSize, processData, activeKey, textValue, selectedRowKeys, resultData, selectValue, collapseState, operatorData, totalPageNum, searchValue, bondData, total, current} = this.state
+    const { bondnameSelect, pageSize, processData, activeKey, textValue, selectedRowKeys, resultData, selectValue, collapseState, operatorData, totalPageNum, searchValue, bondData, total, current} = this.state
     const columns = [{
       title: '债券名称',
       dataIndex: 'bondname',
       key: 'bondname',
+      render: (text, record) => (
+        <Select style={{ width: '100%' }} dropdownMatchSelectWidth={false} value={text} onChange={this.onCellChange(record.key, 'bondname')}>
+          {bondnameSelect && bondnameSelect.map(item => {
+            return <Option key={item} value={item}>{item}</Option>
+          })}
+        </Select>
+      ),
     }, {
       title: '标位',
       dataIndex: 'bw',
