@@ -49,7 +49,7 @@
     background-color: #ccc;
 }
 .click-row {
-    background-color : #cbf2ff
+    background-color : #D6E2F3
 }
 .fix-btn{
     position: fixed;
@@ -63,8 +63,7 @@
     .ant-collapse-content{
         padding: 0 8px;
         .ant-collapse-content-box{
-            padding-top: 4px;
-            padding-bottom: 4px;
+            padding: 0;
         }
     }
     .ant-table-body{
@@ -85,7 +84,7 @@
     .ant-collapse-header{
         font-weight: bold;
         font-size: 14px;
-        background-color: #63c8cf;
+        background-color: #6782B7;
     }
     .ant-table-thead>tr>th>span{
         font-weight: bold;
@@ -93,9 +92,23 @@
     }
     .ant-table-row{
         color: #000;
+        font-size: 14px;
     }
     .ant-table-tbody>tr>td.ant-table-selection-column, .ant-table-thead>tr>th.ant-table-selection-column{
         width: 30px;
         min-width: 0;
     }
+    .ant-table-small .ant-table-thead>tr>th {
+        background-color: #8CA1C9;
+    }
+    .arrow:before{
+        color: #fff;
+    }
+    .ant-table-tbody > tr >td:hover{
+        background: #fff !important;
+      }
+      .ant-table-tbody > tr > td {
+        background: rgba(255,255,255,0) !important;
+      }
+
 }

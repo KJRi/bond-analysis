@@ -1268,7 +1268,7 @@ class TargetComponent extends React.PureComponent {
                     <Button type='primary' onClick={this.submitDatabase}>提交入库</Button>
                   </div>
                   <Scrollbars autoHide style={{ height: 190, backgroundColor: '#fff' }}>
-                    <Table size="middle" style={{ backgroundColor: '#FFF' }} columns={columns} dataSource={processData} pagination={false} rowSelection={rowSelection} scroll={{ x: 'max-content' }} />
+                    <Table size="small" style={{ backgroundColor: '#FFF' }} columns={columns} dataSource={processData} pagination={false} rowSelection={rowSelection} scroll={{ x: 'max-content' }} />
                   </Scrollbars>
                 </Content>
               </Layout>
@@ -1285,7 +1285,7 @@ class TargetComponent extends React.PureComponent {
                 <Collapse activeKey={activeKey} onChange={(e) => this.setState({ activeKey: e })}>
                   {
                     resultData && resultData.map(item => {
-                      return <Panel header={<span>{
+                      return <Panel header={<span style={{ color: '#fff' }}>{
                         item.attention === '1'
                         ? <Icon style={{ color: '#ee9b1f', fontSize: 12 }} type="star" />
                         : <Icon style={{ color: '#707070', fontSize: 12 }} type="star-o" />
@@ -1299,7 +1299,7 @@ class TargetComponent extends React.PureComponent {
                       </span>} key={item.bondname} >
                         {
                           item.bondnameID
-                          ? <Table size="middle" style={{ backgroundColor: '#FFF' }} columns={resultColumns}
+                          ? <Table size="small" style={{ backgroundColor: '#FFF' }} columns={resultColumns}
                           dataSource={item.childArr} rowClassName={this.matchRowSelection}
                           onRowClick={this.rowClick}
                           pagination={false} scroll={{ x: 'max-content' }} />

@@ -92,13 +92,14 @@ class TradeComponent extends React.PureComponent {
   }
 
   handleProcessData = (data) => {
+    let { textValue } = this.state
     const _this = this
     if (data.length === 0) {
       return
     }
-    let findItem = data.find(item => item.matchString.indexOf('~') !== -1)
     let index = data.findIndex(item => item.matchString.indexOf('~') !== -1)
     if (index !== -1) {
+      let findItem = data.find(item => item.matchString.indexOf('~') !== -1)
       const radioStyle = {
         display: 'block',
         height: '20px',
@@ -113,16 +114,18 @@ class TradeComponent extends React.PureComponent {
         }
       })
       let inputValue = newArr[newArr.length - 1].matchString
+      data.map((etem, endex) => {
+        if (endex === index) {
+          let newText = textValue.slice(etem.start)
+          newText = newText.replace(etem.subString, `<span style="color: red;">${etem.subString}</span>`)
+          textValue = textValue.slice(0, etem.start) + newText
+        }
+      })
       newArr.pop()
       Modal.confirm({
         title: '请选择',
         content: <div>
-          <h3>{data.map((etem, endex) => {
-            let matchString = etem.matchString
-            return  endex === index
-            ? <span key={endex} style={{ color: 'red' }}>{inputValue} </span>
-            : <span>{matchString} </span>
-          })}</h3>
+          <div dangerouslySetInnerHTML={{__html: textValue }} key={index} />
           <p style={{ color: 'red', marginTop: 20 }}>原文标红处匹配多项信息：请选择</p>
           <RadioGroup defaultValue={0} onChange={e => radioValue = e.target.value }>
             {newArr.map(etem => { return <Radio style={radioStyle} key={etem.key} value={etem.key}>{etem.type === '债券名称' ? '【券名】' : '【客户】'} {etem.matchString}</Radio> })}

@@ -30,6 +30,9 @@
     cursor: pointer;
     color: #437fff;
 }
+.red-label{
+    color: red;
+}
 .aline{
     background-color:#ccc;
     height:1px;
