@@ -139,8 +139,15 @@ class TargetComponent extends React.PureComponent {
           const obj = this.state.operatorData.find(item => item.operatorID === value)
           target['operator'] = obj.operator;
         }
-        target[dataIndex] = value;
-        this.setState({ processData });
+        const reg = /^\d+(\.\d+)?$/
+        if (value && dataIndex === 'bw' && !reg.test(value)) {
+          message.destroy()
+          message.error("标位不合法")
+          this.setState({ processData })
+          return
+        }
+        target[dataIndex] = value
+        this.setState({ processData })
       }
     };
   }
@@ -154,9 +161,22 @@ class TargetComponent extends React.PureComponent {
           const obj = this.state.operatorData.find(item => item.operatorID === value)
           target['operator'] = obj.operator;
         }
-        target[dataIndex] = value;
+        const reg = /^\d+(\.\d+)?$/
+        if (dataIndex === 'bw' && !reg.test(value)) {
+          message.destroy()
+          message.error("标位不合法")
+          this.setState({ resultData })
+          return
+        }
+        if (dataIndex === 'bl' && !reg.test(value)) {
+          message.destroy()
+          message.error("标量不合法")
+          this.setState({ resultData })
+          return
+        }
+        target[dataIndex] = value
         target['changeState'] = true
-        this.setState({ resultData });
+        this.setState({ resultData })
       }
     };
   }
