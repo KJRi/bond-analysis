@@ -11,21 +11,6 @@ const { Option } = Select
 const { TextArea } = Input
 const { Panel } = Collapse
 
-
-function myreplaceStr(str){
-  var mystr = "            " ; 
-  return str + mystr.substr(str.length-1 , 12) ; 
-}
-
-function copyToClipboard(txt) {
-  var textarea = document.createElement("textarea");
-  textarea.value = txt;
-  document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand("copy");
-  document.body.removeChild(textarea);
-}
-
 class TradeComponent extends React.PureComponent {
   constructor (props) {
     super(props)

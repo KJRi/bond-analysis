@@ -4,6 +4,7 @@ import styles from './Home.css'
 import { Tabs } from 'antd'
 import TargetComponent from 'components/TargetComponent'
 import TradeComponent from 'components/TradeComponent'
+import BondAnalyze from 'components/BondAnalyze'
 const { TabPane } = Tabs;
 
 
@@ -29,8 +30,11 @@ class Home extends React.PureComponent {
             <TabPane tab="一级投标解析" key='0' style={{ padding: '0 8px' }}>
               <TargetComponent {...this.props} />
             </TabPane>
-            <TabPane disabled tab="二级交易解析" key='1' style={{ padding: '0 8px' }}>
+            <TabPane tab="二级交易解析" key='1' style={{ padding: '0 8px' }}>
               <TradeComponent {...this.props} />
+            </TabPane>
+            <TabPane tab="债券区间解析" key='2' style={{ padding: '0 8px' }}>
+              <BondAnalyze {...this.props} />
             </TabPane>
           </Tabs>
         </div>
