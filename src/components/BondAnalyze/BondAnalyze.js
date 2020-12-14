@@ -35,13 +35,35 @@ class BondAnalyze extends React.PureComponent {
     }
   }
 
+  onCellChange = (key, dataIndex) => {
+    return (value) => {
+      const processData = [...this.state.processData];
+      const target = processData.find(item => item.key === key);
+      if (target) {
+        if (dataIndex === 'operatorID') {
+          const obj = this.state.operatorData.find(item => item.operatorID === value)
+          target['operator'] = obj.operator;
+        }
+        const reg = /^\d+(\.\d+)?$/
+        if (value && dataIndex === 'bw' && !reg.test(value)) {
+          message.destroy()
+          message.error("标位不合法")
+          this.setState({ processData })
+          return
+        }
+        target[dataIndex] = value
+        this.setState({ processData })
+      }
+    };
+  }
+
   handleProcess = () => {
     this.hasCookie()
     const { textValue, dateValue } = this.state
     var urlencoded = new URLSearchParams();
     urlencoded.append("input", textValue);
     urlencoded.append("day", moment(dateValue).format('YYYY-MM-DD'));
-    fetch(`${__API__}controller/second/sa`, {
+    fetch(`${__API__}sectionAnalysis`, {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -51,11 +73,11 @@ class BondAnalyze extends React.PureComponent {
       redirect: 'follow'
     }).then(res => res.json())
     .then(result => {
-      if (result.success === '1') {
-        this.handleProcessData(result.data)
+      if (result.length !== 0) {
+        this.handleProcessData(result)
       } else {
         message.destroy()
-        message.error(result.msg)
+        message.error('解析出错')
       }
     })
     .catch(error => console.log('error', error));
@@ -67,23 +89,23 @@ class BondAnalyze extends React.PureComponent {
     if (data.length === 0) {
       return
     }
-    let index = data.findIndex(item => item.matchString.indexOf('~') !== -1)
+    let index = data.findIndex(item => item.matchStr.indexOf('~') !== -1)
     if (index !== -1) {
-      let findItem = data.find(item => item.matchString.indexOf('~') !== -1)
+      let findItem = data.find(item => item.matchStr.indexOf('~') !== -1)
       const radioStyle = {
         display: 'block',
         height: '20px',
         lineHeight: '20px',
       }
       let radioValue = 0
-      let newArr = findItem.matchString.split('~').map((etem, endex) => {
+      let newArr = findItem.matchStr.split('~').map((etem, endex) => {
         return {
-          matchString: etem,
+          matchStr: etem,
           type: findItem.type.split('~')[endex],
           key: endex,
         }
       })
-      let inputValue = newArr[newArr.length - 1].matchString
+      let inputValue = newArr[newArr.length - 1].matchStr
       data.map((etem, endex) => {
         if (endex === index) {
           let newText = textValue.slice(etem.start)
@@ -98,7 +120,7 @@ class BondAnalyze extends React.PureComponent {
           <div dangerouslySetInnerHTML={{__html: textValue }} key={index} />
           <p style={{ color: 'red', marginTop: 20 }}>原文标红处匹配多项信息：请选择</p>
           <RadioGroup defaultValue={0} onChange={e => radioValue = e.target.value }>
-            {newArr.map(etem => { return <Radio style={radioStyle} key={etem.key} value={etem.key}>{etem.type === '债券名称' ? '【券名】' : '【客户】'} {etem.matchString}</Radio> })}
+            {newArr.map(etem => { return <Radio style={radioStyle} key={etem.key} value={etem.key}>{etem.type === '债券名称' ? '【券名】' : '【客户】'} {etem.matchStr}</Radio> })}
             <Radio style={radioStyle} value={-1}>标红处无信息</Radio>
             <Radio style={radioStyle} value='custom'><Input addonBefore='自定义客户为' defaultValue={inputValue} onChange={e => inputValue = e.target.value } /></Radio>
           </RadioGroup>
@@ -115,7 +137,7 @@ class BondAnalyze extends React.PureComponent {
               onOk() {
                 const newObj = findItem
                 Object.assign(newObj, {
-                  matchString: inputValue,
+                  matchStr: inputValue,
                   type: newArr[newArr.length - 1].type,
                 })
                 data.splice(index, 1, newObj)
@@ -140,7 +162,7 @@ class BondAnalyze extends React.PureComponent {
 
   structuredByList = (data) => {
     const _this = this
-    fetch(`${__API__}controller/second/structed`, {
+    fetch(`${__API__}sectionStructured`, {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -150,17 +172,9 @@ class BondAnalyze extends React.PureComponent {
       redirect: 'follow'
     }).then(res => res.json())
     .then(result => {
-      if (result.success === '1') {
-        this.setState({
-          structData: result.data,
-        })
-      } else {
-        message.destroy()
-        message.error(result.msg)
-        this.setState({
-          structData: [],
-        })
-      }
+      this.setState({
+        structData: result,
+      })
     })
     .catch(error => console.log('error', error));
   }
@@ -250,8 +264,8 @@ class BondAnalyze extends React.PureComponent {
                   </div>
                 </div>
                 <Table size="small" style={{ backgroundColor: '#FFF' }} columns={columns}
-                          onRowClick={this.rowClick}
-                          pagination={false} scroll={{ x: 'max-content' }} />
+                  onRowClick={this.rowClick}
+                  pagination={false} scroll={{ x: 'max-content' }} />
               </Footer>
             </Scrollbars>
           </Content>
