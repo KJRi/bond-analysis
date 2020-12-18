@@ -27,6 +27,27 @@ class TradeComponent extends React.PureComponent {
     // this.handleSearch()
   }
 
+  onCellChange = (index, endex, dataIndex) => {
+    return (value) => {
+      const structData = [...this.state.structData];
+      const data = structData[index].data;
+      const target = data[endex]
+      if (target) {
+        if (dataIndex === 'operatorID') {
+          const obj = this.state.operatorData.find(item => item.operatorID === value)
+          target['operator'] = obj.operator;
+        }
+        if (dataIndex === 'payDay') {
+          target[dataIndex] = moment(value).format('YYYY-MM-DD');
+        } else {
+          target[dataIndex] = value
+        }
+        target['changeState'] = false
+        this.setState({ structData })
+      }
+    }
+  }
+
   hasCookie = () => {
     const cookie = document.cookie
     if (cookie.indexOf('cookids=') === -1) {
@@ -94,11 +115,10 @@ class TradeComponent extends React.PureComponent {
       let newArr = findItem.matchString.split('~').map((etem, endex) => {
         return {
           matchString: etem,
-          type: findItem.type.split('~')[endex],
+          type: findItem.type,
           key: endex,
         }
       })
-      let inputValue = newArr[newArr.length - 1].matchString
       data.map((etem, endex) => {
         if (endex === index) {
           let newText = textValue.slice(etem.start)
@@ -106,38 +126,20 @@ class TradeComponent extends React.PureComponent {
           textValue = textValue.slice(0, etem.start) + newText
         }
       })
-      newArr.pop()
       Modal.confirm({
         title: '请选择',
+        width: 800,
         content: <div>
           <div dangerouslySetInnerHTML={{__html: textValue }} key={index} />
           <p style={{ color: 'red', marginTop: 20 }}>原文标红处匹配多项信息：请选择</p>
           <RadioGroup defaultValue={0} onChange={e => radioValue = e.target.value }>
             {newArr.map(etem => { return <Radio style={radioStyle} key={etem.key} value={etem.key}>{etem.type === '债券名称' ? '【券名】' : '【客户】'} {etem.matchString}</Radio> })}
             <Radio style={radioStyle} value={-1}>标红处无信息</Radio>
-            <Radio style={radioStyle} value='custom'><Input addonBefore='自定义客户为' defaultValue={inputValue} onChange={e => inputValue = e.target.value } /></Radio>
           </RadioGroup>
         </div>,
         okText: '确认选择',
-        cancelText: '关闭',
         onOk() {
-          if (radioValue === 'custom') {
-            Modal.confirm({
-              title: '选择临时客户',
-              content: <p>您确定选择临时客户:  <span style={{ color: 'red' }}>{inputValue}</span></p>,
-              okText: '确认',
-              cancelText: '取消',
-              onOk() {
-                const newObj = findItem
-                Object.assign(newObj, {
-                  matchString: inputValue,
-                  type: newArr[newArr.length - 1].type,
-                })
-                data.splice(index, 1, newObj)
-                _this.handleProcessData(data)
-              },
-            })
-          } else if (radioValue === -1) {
+          if (radioValue === -1) {
             data.splice(index, 1)
             _this.handleProcessData(data)
           } else {
@@ -180,8 +182,38 @@ class TradeComponent extends React.PureComponent {
     .catch(error => console.log('error', error));
   }
 
+  submitBtn = (data, index, endex) => {
+    fetch(`${__API__}controller/second/saveData`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        "Content-Type": "application/json ; charset=UTF-8",
+      },
+      body: JSON.stringify([data]),
+      redirect: 'follow'
+    }).then(res => res.json())
+    .then(result => {
+      const structData = [...this.state.structData];
+      const data = structData[index].data;
+      const target = data[endex]
+      target['changeState'] = true
+      this.setState({ structData })
+      if (result.isSuccess === '1') {
+        message.destroy()
+        message.success(result.msg)
+      } else {
+        message.destroy()
+        message.error(result.msg)
+      }
+    })
+    .catch(error => console.log('error', error));
+  }
+
   render () {
     const { textValue, structData, operatorData, dateValue } = this.state
+    const buyInOut = ['卖出', '买入']
+    const requestOption = ['发请求', '发对话', '-']
+    const replacePayment = ['上海国利货币经纪有限公司', '上海国际货币经纪有限责任公司', '平安利顺国际货币经纪有限责任公司', '中诚宝捷思货币经纪有限公司', '天津信唐货币经纪有限责任公司']
     return (
         <Layout className={styles['container']}>
           <Content style={{ borderRadius: 10, marginRight: 8 }} className={styles['text-area']}>
@@ -195,110 +227,99 @@ class TradeComponent extends React.PureComponent {
                   <Button type='primary' onClick={this.handleProcess}>语义解析</Button>
                   </div>
                 </div>
-                <TextArea rows={6} value={textValue} onChange={(e) => this.setState({ textValue: e.target.value })} />
+                <TextArea placeholder="请粘贴语料..." rows={6} value={textValue} onChange={(e) => this.setState({ textValue: e.target.value })} />
               </Content>
               <Footer className={styles['text-area']}>
                 <div style={{ justifyContent: 'space-between', display: 'flex', marginBottom: 10 }}>
                   <h3>解析结果</h3>
-                  {/* <div>
-                    <Button type='primary' style={{ marginRight: 10 }} onClick={this.handleRefresh}>刷新</Button>
-                  </div> */}
                 </div>
                 {
                   structData && structData.map((item, index) => {
-                    const buyInArr = item.data.filter(e => { return e.tradDirection === '买入' })
-                    const buyOutArr = item.data.filter(e => { return e.tradDirection === '卖出' })
                     return <div className={styles['bond-item']} key={index} >
-                      <Row styles={{ mariginBottom: 10 }}>
+                      <Row style={{ mariginBottom: 10 }}>
                         <Col span={20}>
                           <span style={{ fontSize: 15, fontWeight: 600, marginLeft: 10 }}>{item.bondname}（{item.bondnameID}）</span>
-                          <span style={{ marginLeft: 20 }}>交易时间：{item.tradeday}</span>
-                        </Col>
-                        <Col span={4}>
-                          <Button type='primary' >提交</Button>
                         </Col>
                     </Row>
                     {
-                      buyInArr.map(etem => {
-                        return <div>
-                          <Row style={{ marginTop: 8 }}>
-                            <Col span={4}>
-                              <span style={{ marginLeft: 20 }}>{etem.orgName}(买方)</span>
-                            </Col>
-                            <Col span={4}>
-                              <span style={{ marginLeft: 20 }}>交易量(万):{etem.tradingVolume}</span>
-                            </Col>
-                            <Col span={4}>
-                            <span style={{ marginLeft: 20 }}>净价(元):{etem.netPrice}</span>
-                            </Col>
-                            <Col span={4}>
-                            <span style={{ marginLeft: 20 }}>收益率:{etem.yield}</span>
-                            </Col>
-                            <Col span={4}>
-                            <span style={{ marginLeft: 20 }}>留费(L):{etem.stayFee}</span>
-                            </Col>
-                            <Col span={4}>
-                            <span style={{ marginLeft: 20 }}>结算速度:{etem.settlementSpeed}</span>
-                            </Col>
-                        </Row>
-                        <Row style={{ marginTop: 8 }}>
-                            <Col span={4} />
-                            <Col span={4}>
-                              <span style={{ marginLeft: 20 }}>请求:{etem.requestState}</span>
-                            </Col>
-                            <Col span={4}>
-                              <span style={{ marginLeft: 20 }}>代付:{etem.replacePayment}</span>
-                            </Col>
-                            <Col span={4}>
-                            <span style={{ marginLeft: 20 }}>交易员:{etem.operator}</span>
-                            </Col>
-                        </Row>
-                        </div>
-                      })
-                    }
-                    <Row>
-                      <Col style={{ paddingLeft: 20 }} span={4}>
-                        <Icon style={{ fontSize: 20, fontWeight: 600, color: '#707070' }} type="reload" />
-                      </Col>
-                      <Col span={20}>
-                        <div className={styles['aline']} />
-                      </Col>
-                    </Row>
-                    {
-                      buyOutArr.map(etem => {
-                        return <div>
-                          <Row style={{ marginTop: 8 }}>
-                            <Col span={4}>
-                              <span style={{ marginLeft: 20 }}>{etem.orgName}(卖方)</span>
-                            </Col>
-                            <Col span={4}>
-                              <span style={{ marginLeft: 20 }}>交易量(万):{etem.tradingVolume}</span>
-                            </Col>
-                            <Col span={4}>
-                            <span style={{ marginLeft: 20 }}>净价(元):{etem.netPrice}</span>
-                            </Col>
-                            <Col span={4}>
-                            <span style={{ marginLeft: 20 }}>收益率:{etem.yield}</span>
-                            </Col>
-                            <Col span={4}>
-                            <span style={{ marginLeft: 20 }}>留费(L):{etem.stayFee}</span>
-                            </Col>
-                            <Col span={4}>
-                            <span style={{ marginLeft: 20 }}>结算速度:{etem.settlementSpeed}</span>
-                            </Col>
-                        </Row>
-                        <Row style={{ marginTop: 8 }}>
-                            <Col span={4} />
-                            <Col span={4}>
-                              <span style={{ marginLeft: 20 }}>请求:{etem.requestState}</span>
-                            </Col>
-                            <Col span={4}>
-                              <span style={{ marginLeft: 20 }}>代付:{etem.replacePayment}</span>
-                            </Col>
-                            <Col span={4}>
-                            <span style={{ marginLeft: 20 }}>交易员:{etem.operator}</span>
-                            </Col>
-                        </Row>
+                      item.data.map((etem, endex) => {
+                        return <div className={styles['bond-col']}>
+                            <div className={styles['space-between']} style={{ width: '90%' }}>
+                              <div>
+                                <Select dropdownMatchSelectWidth={false} value={etem.orgName} onChange={this.onCellChange(index, endex, 'orgName')}>
+                                  {etem.orgNames && etem.orgNames.map(op => {
+                                    return <Option key={op} value={op}>{op}</Option>
+                                  })}
+                                </Select>
+                                <Select dropdownMatchSelectWidth={false} value={etem.tradDirection} onChange={this.onCellChange(index, endex, 'tradDirection')}>
+                                  {buyInOut && buyInOut.map(op => {
+                                    return <Option key={op} value={op}>{op}</Option>
+                                  })}
+                                </Select></div>
+                              <div style={{ width: '90%', marginLeft: 20 }}>
+                                <Row>
+                                  <Col span={5}>
+                                    <span className={styles['flex-item']}>交易量(万):<EditableCell
+                                      value={etem.tradingVolume}
+                                      onChange={this.onCellChange(index, endex, 'tradingVolume')}
+                                    /></span>
+                                  </Col>
+                                  <Col span={5}>
+                                    <span className={styles['flex-item']}>净价(万):<EditableCell
+                                      value={etem.netPrice}
+                                      onChange={this.onCellChange(index, endex, 'netPrice')}
+                                    /></span>
+                                  </Col>
+                                  <Col span={5}>
+                                    <span className={styles['flex-item']}>收益率:<EditableCell
+                                      value={etem.yield}
+                                      onChange={this.onCellChange(index, endex, 'yield')}
+                                    /></span>
+                                  </Col>
+                                  <Col span={5}>
+                                    <span className={styles['flex-item']}>留费(L):<EditableCell
+                                      value={etem.stayFee}
+                                      onChange={this.onCellChange(index, endex, 'stayFee')}
+                                    /></span>
+                                  </Col>
+                                  <Col span={4}>
+                                    <span className={styles['flex-item']}>结算速度:<EditableCell
+                                      value={etem.settlementSpeed}
+                                      onChange={this.onCellChange(index, endex, 'settlementSpeed')}
+                                    /></span>
+                                  </Col>
+                              </Row>
+                              <Row style={{ marginTop: 10 }}>
+                                  <Col span={5}>
+                                  <span className={styles['flex-item']}>请求:&emsp;
+                                  <Select dropdownMatchSelectWidth={false} value={etem.requestState} onChange={this.onCellChange(index, endex, 'requestState')}>
+                                  {requestOption && requestOption.map(op => {
+                                    return <Option key={op} value={op}>{op}</Option>
+                                  })}
+                                </Select></span>
+                                  </Col>
+                                  <Col span={5}>
+                                    交易时间:&emsp;<DatePicker style={{ width: 100 }} value={moment(etem.payDay)} onChange={this.onCellChange(index, endex, 'payDay')} />
+                                  </Col>
+                                  <Col span={5}>
+                                    交易员:&emsp;
+                                      <Select dropdownMatchSelectWidth={false} value={etem.operator} onChange={this.onCellChange(index, endex, 'operator')}>
+                                        {operatorData && operatorData.map(op => {
+                                          return <Option key={op.operatorID} value={op.operatorID}>{op.operator}</Option>
+                                        })}
+                                      </Select>
+                                  </Col>
+                                  <Col span={7}>
+                                  <span className={styles['flex-item']}>代付:&emsp;<Select dropdownMatchSelectWidth={false} value={etem.replacePayment} onChange={this.onCellChange(index, endex, 'replacePayment')}>
+                                    {replacePayment && replacePayment.map(op => {
+                                      return <Option key={op} value={op}>{op}</Option>
+                                    })}
+                                  </Select></span>
+                                  </Col>
+                              </Row>
+                            </div>
+                          </div>
+                          <Button type='primary' disabled={etem.changeState} onClick={() => this.submitBtn(etem, index, endex)} >提交</Button>
                         </div>
                       })
                     }

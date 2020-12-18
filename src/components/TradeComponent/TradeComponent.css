@@ -21,10 +21,11 @@
 }
 .bond-item{
     width: 100%;
-    padding: 7px 10px;
-    border-radius: 5px;
-    background-color: #f7f7f7;
+    padding: 10px 0 0 0;
+    border-radius: 3px;
+    background-color: #f2fcff;
     margin-bottom: 10px;
+    border: 1px solid #666;
 }
 .opeate-item{
     cursor: pointer;
@@ -33,10 +34,23 @@
 .red-label{
     color: red;
 }
+.flex-item{
+    display: flex;
+}
 .aline{
     background-color:#ccc;
     height:1px;
     margin: 10px;
+}
+.bond-col{
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    border-bottom: 1px solid #666;
+}
+.space-between{
+    display: flex;
+    justify-content: space-between;
 }
 :global {
     .ant-tabs-bar{
