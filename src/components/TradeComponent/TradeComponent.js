@@ -20,11 +20,11 @@ class TradeComponent extends React.PureComponent {
     dateValue: moment(),
     operatorData: [],
     structData: [],
+    orgData: [],
   }
 
   componentDidMount () {
     this.getOperator()
-    // this.handleSearch()
   }
 
   onCellChange = (index, endex, dataIndex) => {
@@ -33,16 +33,16 @@ class TradeComponent extends React.PureComponent {
       const data = structData[index].data;
       const target = data[endex]
       if (target) {
-        if (dataIndex === 'operatorID') {
-          const obj = this.state.operatorData.find(item => item.operatorID === value)
-          target['operator'] = obj.operator;
+        if (dataIndex === 'operator') {
+          const obj = this.state.operatorData.find(item => item.operator === value)
+          target['operatorID'] = obj.operatorID;
         }
         if (dataIndex === 'payDay') {
           target[dataIndex] = moment(value).format('YYYY-MM-DD');
         } else {
           target[dataIndex] = value
         }
-        target['changeState'] = false
+        // target['changeState'] = false
         this.setState({ structData })
       }
     }
@@ -69,6 +69,26 @@ class TradeComponent extends React.PureComponent {
       })
     })
     .catch(error => console.log('error', error));
+  }
+
+  getOrgName = (key) => {
+    fetch(`${__API__}controller/second/selectOrgNames_Parent?key=${key}`, {
+      method: 'GET',
+      credentials: 'include',
+    }).then(res => res.json())
+    .then(result => {
+      this.setState({
+        orgData: result,
+      })
+    })
+    .catch(error => console.log('error', error));
+  }
+
+  fetchOrg = (value) => {
+    console.log(value, value.length)
+    if(value.length > 1) {
+      this.getOrgName(value)
+    }
   }
 
   handleProcess = () => {
@@ -168,6 +188,8 @@ class TradeComponent extends React.PureComponent {
     }).then(res => res.json())
     .then(result => {
       if (result.success === '1') {
+        message.destroy()
+        message.success('解析成功')
         this.setState({
           structData: result.data,
         })
@@ -182,7 +204,16 @@ class TradeComponent extends React.PureComponent {
     .catch(error => console.log('error', error));
   }
 
+  changeBtnState = (index, endex, changeState) => {
+    const structData = [...this.state.structData];
+    const item = structData[index].data;
+    const target = item[endex]
+    target['changeState'] = changeState
+    this.setState({ structData })
+  }
+
   submitBtn = (data, index, endex) => {
+    this.changeBtnState(index, endex, true)
     fetch(`${__API__}controller/second/saveData`, {
       method: 'POST',
       credentials: 'include',
@@ -193,14 +224,13 @@ class TradeComponent extends React.PureComponent {
       redirect: 'follow'
     }).then(res => res.json())
     .then(result => {
-      const structData = [...this.state.structData];
-      const data = structData[index].data;
-      const target = data[endex]
-      target['changeState'] = true
-      this.setState({ structData })
       if (result.isSuccess === '1') {
         message.destroy()
         message.success(result.msg)
+      } else if(result.isSuccess === '-3') {
+        this.changeBtnState(index, endex, false)
+        message.destroy()
+        message.error(result.msg)
       } else {
         message.destroy()
         message.error(result.msg)
@@ -210,7 +240,7 @@ class TradeComponent extends React.PureComponent {
   }
 
   render () {
-    const { textValue, structData, operatorData, dateValue } = this.state
+    const { textValue, structData, operatorData, dateValue, orgData } = this.state
     const buyInOut = ['卖出', '买入']
     const requestOption = ['发请求', '发对话', '-']
     const replacePayment = ['上海国利货币经纪有限公司', '上海国际货币经纪有限责任公司', '平安利顺国际货币经纪有限责任公司', '中诚宝捷思货币经纪有限公司', '天津信唐货币经纪有限责任公司']
@@ -246,8 +276,8 @@ class TradeComponent extends React.PureComponent {
                         return <div className={styles['bond-col']}>
                             <div className={styles['space-between']} style={{ width: '90%' }}>
                               <div>
-                                <Select dropdownMatchSelectWidth={false} value={etem.orgName} onChange={this.onCellChange(index, endex, 'orgName')}>
-                                  {etem.orgNames && etem.orgNames.map(op => {
+                                <Select showSearch onSearch={this.fetchOrg} style={{ width: 240 }} dropdownMatchSelectWidth={false} value={etem.orgName} onChange={this.onCellChange(index, endex, 'orgName')}>
+                                  {orgData && orgData.map(op => {
                                     return <Option key={op} value={op}>{op}</Option>
                                   })}
                                 </Select>
@@ -265,7 +295,7 @@ class TradeComponent extends React.PureComponent {
                                     /></span>
                                   </Col>
                                   <Col span={5}>
-                                    <span className={styles['flex-item']}>净价(万):<EditableCell
+                                    <span className={styles['flex-item']}>净价(元):<EditableCell
                                       value={etem.netPrice}
                                       onChange={this.onCellChange(index, endex, 'netPrice')}
                                     /></span>
@@ -299,13 +329,13 @@ class TradeComponent extends React.PureComponent {
                                 </Select></span>
                                   </Col>
                                   <Col span={5}>
-                                    交易时间:&emsp;<DatePicker style={{ width: 100 }} value={moment(etem.payDay)} onChange={this.onCellChange(index, endex, 'payDay')} />
+                                    交易时间:&emsp;<DatePicker allowClear={false} style={{ width: 100 }} value={moment(etem.payDay)} onChange={this.onCellChange(index, endex, 'payDay')} />
                                   </Col>
                                   <Col span={5}>
                                     交易员:&emsp;
-                                      <Select dropdownMatchSelectWidth={false} value={etem.operator} onChange={this.onCellChange(index, endex, 'operator')}>
+                                      <Select showSearch style={{ width: 80 }} dropdownMatchSelectWidth={false} value={etem.operator} onChange={this.onCellChange(index, endex, 'operator')}>
                                         {operatorData && operatorData.map(op => {
-                                          return <Option key={op.operatorID} value={op.operatorID}>{op.operator}</Option>
+                                          return <Option value={op.operator}>{op.operator}</Option>
                                         })}
                                       </Select>
                                   </Col>

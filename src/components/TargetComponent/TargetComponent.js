@@ -135,9 +135,9 @@ class TargetComponent extends React.PureComponent {
       const processData = [...this.state.processData];
       const target = processData.find(item => item.key === key);
       if (target) {
-        if (dataIndex === 'operatorID') {
-          const obj = this.state.operatorData.find(item => item.operatorID === value)
-          target['operator'] = obj.operator;
+        if (dataIndex === 'operator') {
+          const obj = this.state.operatorData.find(item => item.operator === value)
+          target['operatorID'] = obj.operatorID;
         }
         const reg = /^\d+(\.\d+)?$/
         if (value && dataIndex === 'bw' && !reg.test(value)) {
@@ -157,9 +157,9 @@ class TargetComponent extends React.PureComponent {
       const resultData = [...this.state.resultData];
       const target = resultData.find(item => item.bondnameID === obj.bondnameID).childArr[obj.key];
       if (target) {
-        if (dataIndex === 'operatorID') {
-          const obj = this.state.operatorData.find(item => item.operatorID === value)
-          target['operator'] = obj.operator;
+        if (dataIndex === 'operator') {
+          const obj = this.state.operatorData.find(item => item.operator === value)
+          target['operatorID'] = obj.operatorID;
         }
         const reg = /^\d+(\.\d+)?$/
         if (dataIndex === 'bw' && !reg.test(value)) {
@@ -1122,9 +1122,9 @@ class TargetComponent extends React.PureComponent {
       dataIndex: 'operator',
       key: 'operator',
       render: (text, record) => (
-        <Select dropdownMatchSelectWidth={false} value={text} onChange={this.onCellChange(record.key, 'operatorID')}>
+        <Select showSearch dropdownMatchSelectWidth={false} value={text} onChange={this.onCellChange(record.key, 'operator')}>
           {operatorData && operatorData.map(item => {
-            return <Option key={item.operatorID} value={item.operatorID}>{item.operator}</Option>
+            return <Option key={item.operator} value={item.operator}>{item.operator}</Option>
           })}
         </Select>
       ),
@@ -1180,9 +1180,9 @@ class TargetComponent extends React.PureComponent {
       key: 'operator',
       sorter: (a, b) => a.state === '有效' && a.operatorID - b.operatorID,
       render: (text, record) => (
-        <Select disabled={record.state !== '有效'} dropdownMatchSelectWidth={false} value={text} onChange={this.onResultCellChange(record, 'operatorID')}>
+        <Select showSearch disabled={record.state !== '有效'} dropdownMatchSelectWidth={false} value={text} onChange={this.onResultCellChange(record, 'operator')}>
           {operatorData && operatorData.map(item => {
-            return <Option key={item.operatorID} value={item.operatorID}>{item.operator}</Option>
+            return <Option key={item.operator} value={item.operator}>{item.operator}</Option>
           })}
         </Select>
       ),

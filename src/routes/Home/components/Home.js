@@ -13,7 +13,7 @@ class Home extends React.PureComponent {
     super(props)
   }
   state = {
-    activeKey: '0',
+    activeKey: sessionStorage.getItem('username') === '李雪' ? '1' : '0',
   }
 
   changeActiveKey = (e) => {
@@ -24,13 +24,14 @@ class Home extends React.PureComponent {
  
   render () {
     const { activeKey } = this.state
+    const username = sessionStorage.getItem('username')
     return (
         <div className={styles['container']}>
-          <Tabs type="card" tabBarExtraContent={<span style={{ color: '#fff', paddingRight: 20 }}>欢迎用户 {sessionStorage.getItem('username')}</span>} activeKey={activeKey} onChange={this.changeActiveKey}>
-            <TabPane tab="一级投标解析" key='0' style={{ padding: '0 8px' }}>
+          <Tabs type="card" tabBarExtraContent={<span style={{ color: '#fff', paddingRight: 20 }}>欢迎用户 {username}</span>} activeKey={activeKey} onChange={this.changeActiveKey}>
+            <TabPane disabled={username === '李雪'} tab="一级投标解析" key='0' style={{ padding: '0 8px' }}>
               <TargetComponent {...this.props} />
             </TabPane>
-            <TabPane tab="二级交易解析" key='1' style={{ padding: '0 8px' }}>
+            <TabPane disabled={username !== '李雪' && username !== 'admin'} tab="二级交易解析" key='1' style={{ padding: '0 8px' }}>
               <TradeComponent {...this.props} />
             </TabPane>
             {/* <TabPane tab="债券区间解析" key='2' style={{ padding: '0 8px' }}>
