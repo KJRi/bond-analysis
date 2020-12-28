@@ -243,7 +243,7 @@ class TradeComponent extends React.PureComponent {
     const { textValue, structData, operatorData, dateValue, orgData } = this.state
     const buyInOut = ['卖出', '买入']
     const requestOption = ['发请求', '发对话', '-']
-    const replacePayment = ['上海国利货币经纪有限公司', '上海国际货币经纪有限责任公司', '平安利顺国际货币经纪有限责任公司', '中诚宝捷思货币经纪有限公司', '天津信唐货币经纪有限责任公司']
+    const replacePayment = ['上海国利货币经纪有限公司', '上海国际货币经纪有限责任公司', '平安利顺国际货币经纪有限责任公司', '中诚宝捷思货币经纪有限公司', '天津信唐货币经纪有限责任公司', '']
     return (
         <Layout className={styles['container']}>
           <Content style={{ borderRadius: 10, marginRight: 8 }} className={styles['text-area']}>
@@ -295,16 +295,20 @@ class TradeComponent extends React.PureComponent {
                                     /></span>
                                   </Col>
                                   <Col span={5}>
-                                    <span className={styles['flex-item']}>净价(元):<EditableCell
-                                      value={etem.netPrice}
-                                      onChange={this.onCellChange(index, endex, 'netPrice')}
-                                    /></span>
+                                    <span className={styles['flex-item']}>净价:
+                                      <Select dropdownMatchSelectWidth={false} value={etem.netPrice} onChange={this.onCellChange(index, endex, 'netPrice')}>
+                                        <Option key='netPrice' value='netPrice'>净价</Option>
+                                        <Option key='ordPrice' value='ordPrice'>全价</Option>
+                                      </Select>
+                                    </span>
                                   </Col>
                                   <Col span={5}>
-                                    <span className={styles['flex-item']}>收益率:<EditableCell
-                                      value={etem.yield}
-                                      onChange={this.onCellChange(index, endex, 'yield')}
-                                    /></span>
+                                    <span className={styles['flex-item']}>收益率:
+                                      <Select dropdownMatchSelectWidth={false} value={etem.yield} onChange={this.onCellChange(index, endex, 'yield')}>
+                                        <Option key='yield' value='yield'>到期收益率</Option>
+                                        <Option key='bnd_yield' value='bnd_yield'>行权收益率</Option>
+                                      </Select>
+                                    </span>
                                   </Col>
                                   <Col span={5}>
                                     <span className={styles['flex-item']}>留费(L):<EditableCell
