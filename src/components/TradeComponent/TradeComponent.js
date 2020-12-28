@@ -35,10 +35,29 @@ class TradeComponent extends React.PureComponent {
       if (target) {
         if (dataIndex === 'operator') {
           const obj = this.state.operatorData.find(item => item.operator === value)
-          target['operatorID'] = obj.operatorID;
+          target['operatorID'] = obj.operatorID
+          target['operator'] = value
         } else if (dataIndex === 'payDay') {
           target[dataIndex] = moment(value).format('YYYY-MM-DD');
         } else {
+          if (dataIndex === 'price') {
+            if (value === 'ordPrice') {
+              target['ordPrice'] = target['netPrice']
+              target['netPrice'] = ''
+            } else {
+              target['netPrice'] = target['ordPrice']
+              target['ordPrice'] = ''
+            }
+          }
+          if (dataIndex === 'yieldOption') {
+            if (value === 'yield') {
+              target['yield'] = target['bnd_yield']
+              target['bnd_yield'] = ''
+            } else {
+              target['bnd_yield'] = target['yield']
+              target['yield'] = ''
+            }
+          }
           target[dataIndex] = value
         }
         // target['changeState'] = false
