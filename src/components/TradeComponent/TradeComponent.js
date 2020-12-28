@@ -1,10 +1,10 @@
 // @flow
-import React from 'react'
-import styles from './TradeComponent.css'
-import { Layout, Button, Input, Modal, Radio, Select, Icon, message, Popconfirm, DatePicker, Row, Col, Collapse } from 'antd'
-import moment from 'moment'
+import { Button, Col, Collapse, DatePicker, Input, Layout, message, Modal, Radio, Row, Select } from 'antd'
 import EditableCell from 'components/EditableCell'
+import moment from 'moment'
+import React from 'react'
 import Scrollbars from 'react-custom-scrollbars'
+import styles from './TradeComponent.css'
 const RadioGroup = Radio.Group
 const { Sider, Content, Footer, Header  } = Layout;
 const { Option } = Select
@@ -36,8 +36,7 @@ class TradeComponent extends React.PureComponent {
         if (dataIndex === 'operator') {
           const obj = this.state.operatorData.find(item => item.operator === value)
           target['operatorID'] = obj.operatorID;
-        }
-        if (dataIndex === 'payDay') {
+        } else if (dataIndex === 'payDay') {
           target[dataIndex] = moment(value).format('YYYY-MM-DD');
         } else {
           target[dataIndex] = value
@@ -296,30 +295,26 @@ class TradeComponent extends React.PureComponent {
                                   </Col>
                                   <Col span={5}>
                                     <span className={styles['flex-item']}>
-                                      <Select dropdownMatchSelectWidth={false}>
-                                        <Option value='净价'>: <EditableCell
-                                          value={etem.netPrice}
-                                          onChange={this.onCellChange(index, endex, 'netPrice')}
-                                        /></Option>
-                                        <Option value='全价'>: <EditableCell
-                                          value={etem.ordPrice}
-                                          onChange={this.onCellChange(index, endex, 'ordPrice')}
-                                        /></Option>
+                                      <Select value={etem.price || 'netPrice'} onChange={this.onCellChange(index, endex, 'price')} dropdownMatchSelectWidth={false}>
+                                        <Option value='netPrice'>净价</Option>
+                                        <Option value='ordPrice'>全价</Option>
                                       </Select>
+                                      <EditableCell
+                                        value={etem.price === 'ordPrice' ? etem.ordPrice : etem.netPrice}
+                                        onChange={this.onCellChange(index, endex, etem.price)}
+                                      />
                                     </span>
                                   </Col>
                                   <Col span={5}>
                                     <span className={styles['flex-item']}>
-                                      <Select dropdownMatchSelectWidth={false}>
-                                        <Option value='到期收益率'>: <EditableCell
-                                          value={etem.yield}
-                                          onChange={this.onCellChange(index, endex, 'yield')}
-                                        /></Option>
-                                        <Option value='行权收益率'>: <EditableCell
-                                          value={etem.bnd_yield}
-                                          onChange={this.onCellChange(index, endex, 'bnd_yield')}
-                                        /></Option>
+                                      <Select value={etem.yieldOption || 'yield'} onChange={this.onCellChange(index, endex, 'yieldOption')} dropdownMatchSelectWidth={false}>
+                                        <Option value='yield'>到期收益率</Option>
+                                        <Option value='bnd_yield'>行权收益率</Option>
                                       </Select>
+                                      <EditableCell
+                                        value={etem.yieldOption === 'bnd_yield' ? etem.bnd_yield : etem.yield}
+                                        onChange={this.onCellChange(index, endex, etem.yieldOption)}
+                                      />
                                     </span>
                                   </Col>
                                   <Col span={5}>
@@ -358,7 +353,11 @@ class TradeComponent extends React.PureComponent {
                                   <Col span={7}>
                                   <span className={styles['flex-item']}>代付:&emsp;<Select dropdownMatchSelectWidth={false} value={etem.replacePayment} onChange={this.onCellChange(index, endex, 'replacePayment')}>
                                     {replacePayment && replacePayment.map(op => {
-                                      return <Option key={op} value={op}>{op}</Option>
+                                      if (op) {
+                                        return <Option key={op} value={op}>{op}</Option>
+                                      } else {
+                                        return <Option key={op} value={op}>无</Option>
+                                      }
                                     })}
                                   </Select></span>
                                   </Col>

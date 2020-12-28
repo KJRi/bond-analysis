@@ -4,7 +4,7 @@ import { Input, Icon } from 'antd';
 
 class EditableCell extends React.Component {
   state = {
-    value: this.props.value,
+    value: this.props.value || '',
     editable: false,
     disabled: this.props.disabled,
   }
