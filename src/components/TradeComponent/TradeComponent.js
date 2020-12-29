@@ -320,7 +320,7 @@ class TradeComponent extends React.PureComponent {
                                       </Select>
                                       <EditableCell
                                         value={etem.price === 'ordPrice' ? etem.ordPrice : etem.netPrice}
-                                        onChange={this.onCellChange(index, endex, etem.price)}
+                                        onChange={this.onCellChange(index, endex, etem.price || 'netPrice')}
                                       />
                                     </span>
                                   </Col>
@@ -332,7 +332,7 @@ class TradeComponent extends React.PureComponent {
                                       </Select>
                                       <EditableCell
                                         value={etem.yieldOption === 'bnd_yield' ? etem.bnd_yield : etem.yield}
-                                        onChange={this.onCellChange(index, endex, etem.yieldOption)}
+                                        onChange={this.onCellChange(index, endex, etem.yieldOption || 'yield')}
                                       />
                                     </span>
                                   </Col>
