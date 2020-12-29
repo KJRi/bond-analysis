@@ -39,6 +39,24 @@ class TradeComponent extends React.PureComponent {
           target['operator'] = value
         } else if (dataIndex === 'payDay') {
           target[dataIndex] = moment(value).format('YYYY-MM-DD');
+        } else if (dataIndex === 'tradDirection') {
+          if (value === '买入') {
+            target['netPrice'] === Number(target['netPrice']) + Number(target['stayFee'])
+          } else {
+            target['netPrice'] === Number(target['netPrice']) - Number(target['stayFee'])
+          }
+        } else if (dataIndex === 'netPrice') {
+          if (target['tradDirection'] === '买入') {
+            target['stayFee'] === Number(value) - Number(target['netPrice'])
+          } else {
+            target['stayFee'] === Number(target['netPrice']) - Number(value)
+          }
+        } else if (dataIndex === 'stayFee') {
+          if (target['tradDirection'] === '买入') {
+            target['netPrice'] === Number(target['netPrice']) + Number(value)
+          } else {
+            target['stayFee'] === Number(target['netPrice']) - Number(value)
+          }
         } else {
           if (dataIndex === 'price') {
             if (value === 'ordPrice') {
@@ -60,7 +78,6 @@ class TradeComponent extends React.PureComponent {
           }
           target[dataIndex] = value
         }
-        // target['changeState'] = false
         this.setState({ structData })
       }
     }
@@ -209,7 +226,14 @@ class TradeComponent extends React.PureComponent {
         message.destroy()
         message.success('解析成功')
         this.setState({
-          structData: result.data,
+          structData: result.data && result.data.map(item => {
+            return item.data && item.data.map(etem => {
+              return {
+                ...etem,
+                netPrice: etem.tradDirection === '买入' ? Number(etem.netPrice) - Number(etem.stayFee),
+              }
+            })
+          }),
         })
       } else {
         message.destroy()
