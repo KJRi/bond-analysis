@@ -48,7 +48,16 @@ $ yarn start      # Compile and launch (same as `npm start`)
 - [ ] react-redux-router
 - [ ] debug logging
 
+## 项目启动
+1. 安装node.js
+2. $ npm install 安装项目依赖包
+3. $ npm start 启动项目 访问http://localhost:3000/
+
 ## 项目打包
 1. $ npm run build
 2. 将dist中的所有文件上传到nginx服务器 路径为/usr/share/nginx/html
 3. 直接访问端口名即可
+
+## 修改环境
+1. config/project.config.js
+2. 修改api（环境变量）
