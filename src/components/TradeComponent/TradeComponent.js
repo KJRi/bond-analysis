@@ -39,25 +39,62 @@ class TradeComponent extends React.PureComponent {
           target['operator'] = value
         } else if (dataIndex === 'payDay') {
           target[dataIndex] = moment(value).format('YYYY-MM-DD');
-        } else if (dataIndex === 'tradDirection') {
-          if (value === '买入') {
-            target['netPrice'] === Number(target['netPrice']) + Number(target['stayFee'])
-          } else {
-            target['netPrice'] === Number(target['netPrice']) - Number(target['stayFee'])
-          }
         } else if (dataIndex === 'netPrice') {
+          const reg = /^(?:[1-9]\d*|0)(?:\.\d+)?$/
+          if (value && !reg.test(value)) { 
+            message.error('请输入数字')
+            return
+          }
+          if (!target['originalNetPrice']) { 
+            target[dataIndex] = value
+            return
+          }
           if (target['tradDirection'] === '买入') {
-            target['stayFee'] === Number(value) - Number(target['netPrice'])
+            const num = Number(value)*1000 - Number(target['originalNetPrice'])*1000
+            if (num < 0) {
+              message.error('留费不能为负值')
+            } else {
+              target['stayFee'] = num.toFixed(1)
+              target[dataIndex] = value
+            }
           } else {
-            target['stayFee'] === Number(target['netPrice']) - Number(value)
+            const num = Number(target['originalNetPrice'])*1000 - Number(value)*1000
+            if (num < 0) {
+              message.error('留费不能为负值')
+            } else {
+              target['stayFee'] = num.toFixed(1)
+              target[dataIndex] = value
+            }
           }
         } else if (dataIndex === 'stayFee') {
+          const reg = /^(?:[1-9]\d*|0)(?:\.\d+)?$/
+          if (value && !reg.test(value)) { 
+            message.error('请输入数字')
+            return
+          }
+          if (!target['originalNetPrice']) { 
+            target[dataIndex] = value
+            return
+          }
           if (target['tradDirection'] === '买入') {
-            target['netPrice'] === Number(target['netPrice']) + Number(value)
+            target['netPrice'] = ((Number(target['originalNetPrice'])*10000 + Number(value)*10) / 10000).toFixed(4)
+            target[dataIndex] = value
           } else {
-            target['stayFee'] === Number(target['netPrice']) - Number(value)
+            if (Number(target['originalNetPrice']) - Number(value) / 1000 < 0) {
+              message.error('净价不能为负值')
+            } else {
+              target['netPrice'] = ((Number(target['originalNetPrice'])*10000 - Number(value)*10) / 10000).toFixed(4)
+              target[dataIndex] = value
+            }
           }
         } else {
+          if (dataIndex === 'tradDirection' && target['originalNetPrice']) {
+            if (value === '买入') {
+              target['netPrice'] = ((Number(target['originalNetPrice'])*10000 + Number(target['stayFee'])*10) / 10000).toFixed(4)
+            } else {
+              target['netPrice'] = ((Number(target['originalNetPrice'])*10000 - Number(target['stayFee'])*10) / 10000).toFixed(4)
+            }
+          }
           if (dataIndex === 'price') {
             if (value === 'ordPrice') {
               target['ordPrice'] = target['netPrice']
@@ -226,14 +263,7 @@ class TradeComponent extends React.PureComponent {
         message.destroy()
         message.success('解析成功')
         this.setState({
-          structData: result.data && result.data.map(item => {
-            return item.data && item.data.map(etem => {
-              return {
-                ...etem,
-                netPrice: etem.tradDirection === '买入' ? Number(etem.netPrice) - Number(etem.stayFee),
-              }
-            })
-          }),
+          structData: result.data,
         })
       } else {
         message.destroy()
@@ -339,8 +369,8 @@ class TradeComponent extends React.PureComponent {
                                   <Col span={5}>
                                     <span className={styles['flex-item']}>
                                       <Select value={etem.price || 'netPrice'} onChange={this.onCellChange(index, endex, 'price')} dropdownMatchSelectWidth={false}>
-                                        <Option value='netPrice'>净价</Option>
-                                        <Option value='ordPrice'>全价</Option>
+                                        <Option value='netPrice'>净价(元)</Option>
+                                        <Option value='ordPrice'>全价(元)</Option>
                                       </Select>
                                       <EditableCell
                                         value={etem.price === 'ordPrice' ? etem.ordPrice : etem.netPrice}

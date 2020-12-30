@@ -48,7 +48,7 @@ class EditableCell extends React.Component {
               />
             </div>
             :
-            <div className="editable-cell-text-wrapper" onDoubleClick={disabled ? null : this.edit} >
+            <div style={{ width: 80 }} className="editable-cell-text-wrapper" onDoubleClick={disabled ? null : this.edit} >
               {value || '-'}
             </div>
         }
