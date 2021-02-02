@@ -240,7 +240,7 @@ class TargetComponent extends React.PureComponent {
           <RadioGroup defaultValue={0} onChange={e => radioValue = e.target.value }>
             {newArr.map(etem => { return <Radio style={radioStyle} key={etem.key} value={etem.key}>{etem.type === '债券名称' ? '【券名】' : '【客户】'} {etem.matchStr}</Radio> })}
             <Radio style={radioStyle} value={-1}>标红处无信息</Radio>
-            <Radio style={radioStyle} value='custom'><Input addonBefore='自定义客户为' defaultValue={inputValue} onChange={e => inputValue = e.target.value } /></Radio>
+            {/* <Radio style={radioStyle} value='custom'><Input addonBefore='自定义客户为' defaultValue={inputValue} onChange={e => inputValue = e.target.value } /></Radio> */}
           </RadioGroup>
         </div>,
         okText: '确认选择',
@@ -879,6 +879,9 @@ class TargetComponent extends React.PureComponent {
         let dataInfo = {}
         item.childArr.forEach(etem => {
           let { bw, state, basestandard } = etem
+          if(bw < item.bidstartvalue){
+            bw = item.bidstartvalue
+          }
           if (!dataInfo[bw]) {
             dataInfo[bw] = {
               bw,
@@ -1158,6 +1161,7 @@ class TargetComponent extends React.PureComponent {
       render: (text, record) => (
         <EditableCell
           value={text}
+          isRed={record.bidstartvalue > Number(text) || record.bidendvalue < Number(text)}
           disabled={record.state !== '有效'}
           onChange={this.onResultCellChange(record, 'bw')}
         />

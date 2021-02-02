@@ -7,6 +7,7 @@ class EditableCell extends React.Component {
     value: this.props.value || '',
     editable: false,
     disabled: this.props.disabled,
+    isRed: this.props.isRed,
   }
 
   componentWillReceiveProps(nextProps) {
@@ -15,6 +16,9 @@ class EditableCell extends React.Component {
     })
     this.state.disabled !== nextProps.disabled && this.setState({
       disabled: nextProps.disabled,
+    })
+    this.state.isRed !== nextProps.isRed && this.setState({
+      isRed: nextProps.isRed,
     })
   }
 
@@ -32,7 +36,7 @@ class EditableCell extends React.Component {
     this.setState({ editable: true }, () => { this.inputComponent.focus() });
   }
   render() {
-    const { value, editable, disabled } = this.state;
+    const { value, editable, disabled, isRed } = this.state;
     return (
       <div className="editable-cell">
         {
@@ -48,7 +52,7 @@ class EditableCell extends React.Component {
               />
             </div>
             :
-            <div style={{ whiteSpace: 'nowrap' }} className="editable-cell-text-wrapper" onDoubleClick={disabled ? null : this.edit} >
+            <div style={{ whiteSpace: 'nowrap', color: isRed ? 'red' : '#000' }} className="editable-cell-text-wrapper" onDoubleClick={disabled ? null : this.edit} >
               {value || '-'}
             </div>
         }

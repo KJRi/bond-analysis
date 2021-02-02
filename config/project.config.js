@@ -26,8 +26,8 @@ const config = {
   // ----------------------------------
   server_host : ip.address(), // use string 'localhost' to prevent exposure on local network
   server_port : process.env.PORT || 3000,
-  //api: 'http://172.16.0.133:8080/SemanticAnalysis1_FICC/',
-   api: 'http://50.2.66.141:8080/SemanticAnalysis1_FICC/',
+  api: 'http://172.16.0.133:8080/SemanticAnalysis1_FICC/',
+  //  api: 'http://50.2.66.141:8080/SemanticAnalysis1_FICC/',
   // api: 'http://50.1.47.77:8084/SemanticAnalysis/',
 
   // ----------------------------------
