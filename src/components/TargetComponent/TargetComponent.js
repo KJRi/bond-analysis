@@ -1,11 +1,12 @@
 // @flow
 import React from 'react'
 import styles from './TargetComponent.css'
-import { Layout, Button, Input, Table, DatePicker, Modal, Radio, Select, Icon, message, Popconfirm, Pagination, Row, Col, Collapse } from 'antd'
+import { Layout, Button, Input, Table, DatePicker, Modal, Form, Radio, Select, Icon, message, Popconfirm, Pagination, Row, Col, Collapse } from 'antd'
 import moment from 'moment'
 import EditableCell from 'components/EditableCell'
 import Scrollbars from 'react-custom-scrollbars'
 const RadioGroup = Radio.Group
+const FormItem = Form.Item
 const { Sider, Content, Footer, Header  } = Layout;
 const { Option } = Select
 const { TextArea } = Input
@@ -52,6 +53,34 @@ const modalColumns = [
   },
 ]
 
+const customColumns = [
+  {
+    title: '机构客户全称',
+    dataIndex: 'mainorganizationname',
+    key: 'mainorganizationname',
+  },
+  {
+    title: '机构客户名称',
+    dataIndex: 'organcstnamecn',
+    key: 'organcstnamecn',
+  },
+  {
+    title: '标准简称',
+    dataIndex: 'standardshortname',
+    key: 'standardshortname',
+  },
+  {
+    title: '主岗交易员',
+    dataIndex: 'trader_zg',
+    key: 'trader_zg',
+  },
+  {
+    title: '副岗交易员',
+    dataIndex: 'trader_bg',
+    key: 'trader_bg',
+  },
+]
+
 function myreplaceStr(str){
   var mystr = "            " ; 
   return str + mystr.substr(str.length-1 , 12) ; 
@@ -86,7 +115,6 @@ class TargetComponent extends React.PureComponent {
     processData: [],
     textValue: '',
     dateValue: moment(),
-    modalState: false,
     operatorData: [],
     selectedRowKeys: [],
     resultData: [],
@@ -100,6 +128,10 @@ class TargetComponent extends React.PureComponent {
     pageSize: 10,
     collapseState: false,
     bondnameSelect: [],
+    customData: [],
+    modalState: false,
+    modalTableData: [],
+    stateProcessData: [],
   }
 
   componentDidMount () {
@@ -125,6 +157,20 @@ class TargetComponent extends React.PureComponent {
     .then(result => {
       this.setState({
         operatorData: result,
+      })
+    })
+    .catch(error => console.log('error', error));
+    fetch(`${__API__}searchDataForAddOrgHT`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded ; charset=UTF-8",
+      },
+      redirect: 'follow'
+    }).then(res => res.json())
+    .then(result => {
+      this.setState({
+        customData: result.date,
       })
     })
     .catch(error => console.log('error', error));
@@ -225,7 +271,7 @@ class TargetComponent extends React.PureComponent {
       })
       let inputValue = newArr[newArr.length - 1].matchStr
       newArr.pop()
-      Modal.confirm({
+      const modal = Modal.confirm({
         title: '请选择',
         content: <div>
           <h3>{data.map((etem, endex) => {
@@ -240,29 +286,21 @@ class TargetComponent extends React.PureComponent {
           <RadioGroup defaultValue={0} onChange={e => radioValue = e.target.value }>
             {newArr.map(etem => { return <Radio style={radioStyle} key={etem.key} value={etem.key}>{etem.type === '债券名称' ? '【券名】' : '【客户】'} {etem.matchStr}</Radio> })}
             <Radio style={radioStyle} value={-1}>标红处无信息</Radio>
-            {/* <Radio style={radioStyle} value='custom'><Input addonBefore='自定义客户为' defaultValue={inputValue} onChange={e => inputValue = e.target.value } /></Radio> */}
           </RadioGroup>
+          {newArr[0].type === '机构名称' &&
+          <Button size='large' style={{position:'absolute',right:'213px',bottom:'30px'}}
+          onClick={() => {
+            modal.destroy()
+            this.setState({
+              modalState: true,
+              stateProcessData: data,
+            })
+          }} >新建客户</Button>}
         </div>,
         okText: '确认选择',
         cancelText: '关闭',
         onOk() {
-          if (radioValue === 'custom') {
-            Modal.confirm({
-              title: '选择临时客户',
-              content: <p>您确定选择临时客户:  <span style={{ color: 'red' }}>{inputValue}</span></p>,
-              okText: '确认',
-              cancelText: '取消',
-              onOk() {
-                const newObj = findItem
-                Object.assign(newObj, {
-                  matchStr: inputValue,
-                  type: '机构名称',
-                })
-                data.splice(index, 1, newObj)
-                _this.handleProcessData(data)
-              },
-            })
-          } else if (radioValue === -1) {
+          if (radioValue === -1) {
             data.splice(index, 1)
             _this.handleProcessData(data)
           } else {
@@ -274,7 +312,25 @@ class TargetComponent extends React.PureComponent {
         },
       })
     } else {
-      this.structuredByList(data)
+      if (data.find(item => item.type === '机构名称')) {
+        this.structuredByList(data)
+      } else {
+        Modal.confirm({
+          title: '提示',
+          content: <p>未识别到客户，是否新增客户？</p>,
+          okText: '新增客户',
+          cancelText: '取消',
+          onOk() {
+            _this.setState({
+              modalState: true,
+              stateProcessData: data,
+            })
+          },
+          onCancel() {
+            _this.structuredByList(data)
+          },
+        })
+      }
     }
   }
 
@@ -524,7 +580,23 @@ class TargetComponent extends React.PureComponent {
               })}</div>,
             okText: '确定',
           })
-        } 
+        } else if(res.isSuccess === '-3') {
+          Modal.confirm({
+            title: '提示',
+            content: <div>{
+              result.map((item, index) => {
+                return <div dangerouslySetInnerHTML={{__html: item.msg }} key={index} />
+              })}</div>,
+            okText: '新增客户',
+            cancelText: '取消',
+            onOk() {
+              _this.setState({
+                modalState: true,
+                stateProcessData: [],
+              })
+            },
+          })
+        }
       } else {
         this.insertResult(newList)
       }
@@ -611,7 +683,7 @@ class TargetComponent extends React.PureComponent {
               title: '重复数据校验',
               content: <div>
                 <p>{res.msg}</p>
-                <Button size='large' style={{position:'absolute',right:'153px',top:'125px'}} onClick={() => modal.destroy()} >取消</Button>
+                <Button size='large' style={{position:'absolute',right:'153px',bottom:'30px'}} onClick={() => modal.destroy()} >取消</Button>
               </div>,
               okText: '是',
               cancelText: '否',
@@ -840,7 +912,7 @@ class TargetComponent extends React.PureComponent {
       redirect: 'follow'
     }).then(res => res.json())
     .then(result => {
-      const resultData = result.map(item => {
+      const resultData = result && result.map(item => {
         return {
           ...item[0],
           childArr: item.map((etem, index) => {
@@ -854,7 +926,7 @@ class TargetComponent extends React.PureComponent {
         }
       })
       this.setState({
-        activeKey: resultData.map(item => {
+        activeKey: resultData && resultData.map(item => {
           return item.bondname
         }),
         resultData,
@@ -949,7 +1021,7 @@ class TargetComponent extends React.PureComponent {
         bondData: result.data,
         total: Number(result.totleRecords) || 0,
         totalPageNum: result.totlePages || 1,
-        current: Number(result.pageNum),
+        current: Number(result.pageNum) || 1,
         pageSize: result.data.length > 10 ? result.data.length : 10,
       })
     })
@@ -998,6 +1070,7 @@ class TargetComponent extends React.PureComponent {
   
   updateItem = (item, str) => {
     this.hasCookie()
+    const _this = this
     Object.assign(item, { cz: str, day: moment(this.state.dateValue).format('YYYY-MM-DD') })
     fetch(`${__API__}updateBJ`, {
       method: 'POST',
@@ -1013,6 +1086,19 @@ class TargetComponent extends React.PureComponent {
         message.destroy()
         message.success(result.msg)
         this.handleRefresh()
+      } else if (result.isSuccess === '-3') {
+        Modal.confirm({
+          title: '提示',
+          content: <p>{result.msg}</p>,
+          okText: '新增客户',
+          cancelText: '取消',
+          onOk() {
+            _this.setState({
+              modalState: true,
+              stateProcessData: [],
+            })
+          },
+        })
       } else {
         Modal.error({
           title: result.msg,
@@ -1077,8 +1163,101 @@ class TargetComponent extends React.PureComponent {
     })
   }
 
+  changeCustom = (e) => {
+    const MainOrganFullName_id = this.state.customData.find(item => item.OrganCstNameCN === e).OrganCstID
+    var urlencoded = new URLSearchParams();
+    urlencoded.append("MainOrganFullName_id", MainOrganFullName_id);
+    fetch(`${__API__}SearchOrgForSelect`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded ; charset=UTF-8",
+      },
+      redirect: 'follow',
+      body: urlencoded,
+    }).then(res => res.json())
+    .then(result => {
+      if (result.isSuccess === '1') {
+        this.setState({
+          modalTableData: result.date,
+        })
+      } else {
+        this.setState({
+          modalTableData: [],
+        })
+      }
+    })
+    .catch(error => console.log('error', error));
+  }
+
+  submiteCustom = (e) => {
+    e.preventDefault()
+    const { form } = this.props
+    form.validateFieldsAndScroll((err, values) => {
+      if (!err) {
+        const { stateProcessData } = this.state
+        const MainOrganFullName_id = this.state.customData.find(item => item.OrganCstNameCN === values.MainOrganFullName_id).OrganCstID
+        var urlencoded = new URLSearchParams();
+        urlencoded.append("MainOrganFullName_id", MainOrganFullName_id)
+        urlencoded.append("MainOrganFullName", values.MainOrganFullName_id)
+        urlencoded.append("OrganCstNameCN", values.OrganCstNameCN)
+        urlencoded.append("trader_zg_id", values.trader_zg_id)
+        if (values.trader_bg_id) urlencoded.append("trader_bg_id", values.trader_bg_id)
+        fetch(`${__API__}AddNewOrg`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded ; charset=UTF-8",
+          },
+          redirect: 'follow',
+          body: urlencoded,
+        }).then(res => res.json())
+        .then(result => {
+          if (result.isSuccess === '1') {
+            message.success(result.msg)
+            if (stateProcessData.length !== 0) {
+              const findIndex = stateProcessData.findIndex(item => item.type.indexOf('机构名称') > 0)
+              if (findIndex !== -1) {
+                const newObj = stateProcessData[findIndex]
+                Object.assign(newObj, { type: '机构名称', matchStr: values.OrganCstNameCN })
+                stateProcessData.splice(findIndex, 1, newObj)
+              } else {
+                const obj = { type: '机构名称', matchStr: values.OrganCstNameCN }
+                stateProcessData.push(obj)
+              }
+              this.structuredByList(stateProcessData)
+            }
+          } else {
+            message.error(result.msg)
+          }
+          setTimeout(() => {
+            form.resetFields()
+            this.setState({
+              modalTableData: [],
+              modalState: false,
+              stateProcessData: [],
+            })
+          }, 0)
+        })
+        .catch(error => console.log('error', error));
+      }
+    })
+  }
+
   render () {
-    const { bondnameSelect, pageSize, processData, activeKey, textValue, selectedRowKeys, resultData, selectValue, collapseState, operatorData, totalPageNum, searchValue, bondData, total, current} = this.state
+    const { bondnameSelect, pageSize, processData, modalState, modalTableData, customData, activeKey, textValue, selectedRowKeys, resultData, selectValue, collapseState, operatorData, totalPageNum, searchValue, bondData, total, current} = this.state
+    const { form } = this.props
+    const { getFieldDecorator } = form
+    const formItemLayout = {
+      labelCol: {
+        xs: { span: 24 },
+        sm: { span: 6 },
+      },
+      wrapperCol: {
+        xs: { span: 24 },
+        sm: { span: 14 },
+      },
+    }
     const columns = [{
       title: '债券名称',
       dataIndex: 'bondname',
@@ -1429,9 +1608,75 @@ class TargetComponent extends React.PureComponent {
             </div>
           </Sider>
           }
+          <Modal
+            title="机构客户创建"
+            okText="保存"
+            maskClosable={false}
+            onCancel={() => {
+              form.resetFields()
+              this.setState({
+                modalState: false,
+                stateProcessData: [],
+              })
+            }}
+            onOk={this.submiteCustom}
+            visible={modalState}>
+            <FormItem
+              {...formItemLayout}
+              label="客户名称"
+            >
+              {getFieldDecorator('OrganCstNameCN', {
+                rules: [{
+                  required: true, message: '请输入客户名称',
+                }],
+              })(
+                <Input style={{ width: 150 }} />
+              )}
+            </FormItem>
+            <FormItem
+              {...formItemLayout}
+              label="客户全称"
+            >
+              {getFieldDecorator('MainOrganFullName_id', {
+                rules: [{
+                  required: true, message: '请选择客户全称',
+                }],
+              })(
+                <Select onChange={this.changeCustom} style={{ width: 300 }} showSearch>
+                  {customData && customData.map(item => { return <Option key={item.OrganCstNameCN} value={item.OrganCstNameCN}>{item.OrganCstNameCN}</Option> })}
+                </Select>
+              )}
+            </FormItem>
+            <FormItem
+              {...formItemLayout}
+              label="主岗交易员"
+            >
+              {getFieldDecorator('trader_zg_id', {
+                rules: [{
+                  required: true, message: '请选择主岗交易员',
+                }],
+              })(
+                <Select style={{ width: 150 }} showSearch>
+                  {operatorData && operatorData.map(item => { return <Option key={item.operatorID} value={item.operatorID}>{item.operator}</Option> })}
+                </Select>
+              )}
+            </FormItem>
+            <FormItem
+              {...formItemLayout}
+              label="副岗交易员"
+            >
+              {getFieldDecorator('trader_bg_id')(
+                <Select style={{ width: 150 }} showSearch>
+                  {operatorData && operatorData.map(item => { return <Option key={item.operatorID} value={item.operatorID}>{item.operator}</Option> })}
+                </Select>
+              )}
+            </FormItem>
+            <p style={{ marginTop: 20 }}>客户全称已存在客户列表</p>
+            <Table columns={customColumns} dataSource={modalTableData} rowKey="organcstid" />
+          </Modal>
         </Layout>
     )
   }
 }
 
-export default TargetComponent
+export default Form.create()(TargetComponent)
